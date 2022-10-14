@@ -12,6 +12,6 @@ public class NotificationData {
 	
 	@Override
 	public String toString() {
-		return "NotificationData [to=" + to + ", bleRawData=" + bleRawData + "]";
+		return "{" + "to : " + to + ", data : " + "";
 	}
 }

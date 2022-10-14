@@ -1,20 +1,17 @@
 package com.ble.server.demo.service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ble.server.demo.model.BleRawData;
-import com.ble.server.demo.model.NotificationData;
 import com.ble.server.demo.repository.BleRawDataRepository;
-import com.google.gson.Gson;
 
 @Service
 public class BleRawDataService {
@@ -53,28 +50,59 @@ public class BleRawDataService {
     }
     
     private void sendNotificationToDevice(BleRawData bleRawData) {
-    	String url = "https://fcm.googleapis.com/fcm/send";
+    	String urlStr = "https://fcm.googleapis.com/fcm/send";
     	String key = "";
     	
     	String to = bleRawData.getFcmToken();
-    	NotificationData data = new NotificationData(to, bleRawData);
+//    	NotificationData data = new NotificationData(to, bleRawData);
+    	String bleRawDataStr = "{"
+    			+ "rawData : " + bleRawData.getRawData() + ","
+    			+ "fcmToken : " + bleRawData.getFcmToken()
+    			+ "}";
     	
-    	HttpRequest request = HttpRequest.newBuilder()
-    			  .uri(URI.create(url))
-    			  .POST(HttpRequest.BodyPublishers.ofString(new Gson().toJson(data)))
-    			  .header("Authorization", "key=" + key)
-    			  .header("Content-Type", "application/json")
-//    			    Base64.getEncoder().encodeToString(("baeldung:123456").getBytes()))
-    			  .build();
-    	
-    	HttpClient client = HttpClient.newHttpClient();
-    	CompletableFuture<HttpResponse<String>> futureResponse = client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+    	URL url;
     	try {
-			HttpResponse<String> response = futureResponse.get();
-			System.out.println("Response=> " + response.statusCode() + response.body());
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-		}
+    		url = new URL (urlStr);
+    		HttpURLConnection con = (HttpURLConnection)url.openConnection();
+    		con.setRequestMethod("POST");
+    		con.setRequestProperty("Content-Type", "application/json");
+    		con.setRequestProperty("Accept", "application/json");
+    		con.setRequestProperty("Authorization", "key=" + key);
+    		con.setDoOutput(true);
+    		String jsonInputString = "{" + "to : " + to + ", data : " + bleRawDataStr;
+    		try(OutputStream os = con.getOutputStream()) {
+    		    byte[] input = jsonInputString.getBytes("utf-8");
+    		    os.write(input, 0, input.length);			
+    		}
+    		try(BufferedReader br = new BufferedReader(
+    				  new InputStreamReader(con.getInputStream(), "utf-8"))) {
+    				    StringBuilder response = new StringBuilder();
+    				    String responseLine = null;
+    				    while ((responseLine = br.readLine()) != null) {
+    				        response.append(responseLine.trim());
+    				    }
+    				    System.out.println(response.toString());
+    		}
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	
+//    	HttpRequest request = HttpRequest.newBuilder()
+//    			  .uri(URI.create(url))
+//    			  .POST(HttpRequest.BodyPublishers.ofString(new Gson().toJson(data)))
+//    			  .header("Authorization", "key=" + key)
+//    			  .header("Content-Type", "application/json")
+////    			    Base64.getEncoder().encodeToString(("baeldung:123456").getBytes()))
+//    			  .build();
+//    	
+//    	HttpClient client = HttpClient.newHttpClient();
+//    	CompletableFuture<HttpResponse<String>> futureResponse = client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+//    	try {
+//			HttpResponse<String> response = futureResponse.get();
+//			System.out.println("Response=> " + response.statusCode() + response.body());
+//		} catch (InterruptedException | ExecutionException e) {
+//			e.printStackTrace();
+//		}
     	
     }
 }
