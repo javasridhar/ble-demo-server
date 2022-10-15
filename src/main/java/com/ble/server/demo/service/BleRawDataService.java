@@ -51,13 +51,12 @@ public class BleRawDataService {
     
     private void sendNotificationToDevice(BleRawData bleRawData) {
     	String urlStr = "https://fcm.googleapis.com/fcm/send";
-    	String key = "";
+    	String key = "AAAA8YMORik:APA91bH2x1Z16rZJIQOHS0f0kixBah4VF3xGqvwSriHnTOC0C2YlX6umb1fqWg61IlyMwqXMgsxagQQ1oUvdrPDU-k7SavCzcotxeqcLok_O6fGWnozGBsMgiCmqREU0bEoWUj-pXl5-";
     	
     	String to = bleRawData.getFcmToken();
-//    	NotificationData data = new NotificationData(to, bleRawData);
     	String bleRawDataStr = "{"
-    			+ "rawData : " + bleRawData.getRawData() + ","
-    			+ "fcmToken : " + bleRawData.getFcmToken()
+    			+ " \"rawData\" : " + "\"" + bleRawData.getRawData() + "\"" + ","
+    			+ " \"fcmToken\" : " + "\"" + bleRawData.getFcmToken() + "\""
     			+ "}";
     	
     	URL url;
@@ -69,7 +68,8 @@ public class BleRawDataService {
     		con.setRequestProperty("Accept", "application/json");
     		con.setRequestProperty("Authorization", "key=" + key);
     		con.setDoOutput(true);
-    		String jsonInputString = "{" + "to : " + to + ", data : " + bleRawDataStr;
+    		String jsonInputString = "{" + "\"" + "to" + "\"" + ":" + "\"" + to + "\"," + "\"" + "data" + "\"" + ":" + bleRawDataStr + "}";
+    		System.out.println("jsonInput=> " + jsonInputString);
     		try(OutputStream os = con.getOutputStream()) {
     		    byte[] input = jsonInputString.getBytes("utf-8");
     		    os.write(input, 0, input.length);			
@@ -84,6 +84,7 @@ public class BleRawDataService {
     				    System.out.println(response.toString());
     		}
     	} catch (Exception e) {
+    		System.out.println("Exception=>" + bleRawData.getId());
     		e.printStackTrace();
     	}
     	
